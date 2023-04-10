@@ -36,7 +36,7 @@ type_extern: EXTERN INT | EXTERN VOID
 type_required : INT | VOID
 type : type_required | 
 
-main_func : func block 
+main_func : func '{' blocks '}'
 func : type_required IDENTIFIER '(' params ')'
 params : INT IDENTIFIER | // maximum of one parameter (must be INT)
 
