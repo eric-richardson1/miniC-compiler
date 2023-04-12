@@ -13,77 +13,72 @@
 	int yyerror(char *);
 	extern FILE *yyin;
 %}
-%token IDENTIFIER NUM IF WHILE INT VOID EXTERN RETURN FUNC '=' '(' ')' '{' '}' ';'
+%token IDENTIFIER NUM IF WHILE INT VOID EXTERN RETURN PRINT READ '=' '(' ')' '{' '}' ';'
 
 %nonassoc IFX
 %nonassoc ELSE
 %left EQ GEQ LEQ '>' '<'
 %left '+' '-'
 %left '*' '/'
-%nonassoc NEG
 %start program
 
 /******************** RULES ********************/
 %%
-/* mini_c programs start with optional declarations of "print" and "read" functions
+/* mini_c programs start with mandatory declarations of "print" and "read" functions
    followed by the primary function definition */
-program : def_func main_func| main_func
-def_func : def_func func_extern | func_extern
-func_extern : type_extern FUNC '(' type ')' ';'
+program : extern function_def
+extern : extern_print extern_read
+extern_print : EXTERN VOID PRINT '(' INT ')' ';'
+extern_read : EXTERN INT READ '(' ')' ';'
 
-/* variations on type declarations */
-type_extern: EXTERN INT | EXTERN VOID
-type_required : INT | VOID
-type : type_required | 
+/* Main function definition followed by a curly-brace-separated block statment */
+function_def : func_header '{' block_stmt '}'
+func_header : INT IDENTIFIER '(' def_params ')'
 
-main_func : func '{' blocks '}'
-func : type_required IDENTIFIER '(' params ')'
-params : INT IDENTIFIER | // maximum of one parameter (must be INT)
+def_params : INT IDENTIFIER | // maximum of one parameter (must be INT)
+call_params : term |		// function calls don't require type declarations
 
 /* supports nested code blocks separated by curly braces */
-blocks : blocks block | block
-block : '{' blocks '}'
-	  | IF '(' condition ')' block %prec IFX
-	  | IF '(' condition ')' block ELSE block
-	  | WHILE '(' condition ')' block
-	  | statement
+block_stmt : var_decls stmts | stmts
+var_decls : var_decls decl | decl
+decl : INT IDENTIFIER ';' 
 
-/* a statement in mini_c should only be one of the following */
-statement : declaration 
-		  | assignment 
-		  | function_call 
-		  | return
 
-declaration : INT IDENTIFIER ';' 
-assignment : IDENTIFIER '=' expression ';'
-function_call : FUNC '(' expression ')' ';' // for predefined functions "print" and "read"
-return : RETURN '(' expression ')' ';'
+stmts : stmts stmt | stmt // supports subsequent statements
 
-/* arithmetic operations */
-expression : operand 
- | '-' expression %prec NEG
- | expression '+' expression 
- | expression '-' expression 
- | expression '*' expression
- | expression '/' expression
- | '(' expression ')' 
+/* a statement in miniC must be one of the following */
+stmt : asgn_stmt
+	 | IF '(' condition ')' stmt %prec IFX
+	 | IF '(' condition ')' stmt ELSE stmt
+	 | while_loop
+	 | '{' block_stmt '}'
+	 | call_stmt ';'
+	 | return_stmt
 
-operand : NUM | IDENTIFIER 
- 
- /* conditional operations (only for use inside 'if' and 'while' blocks) */
-condition : expression EQ expression
-		  | expression GEQ expression
-		  | expression LEQ expression
-		  | expression '>' expression
-		  | expression '<' expression
+term : IDENTIFIER | NUM
+/* arithmetic operations and function calls */
+expr : term
+	 | term '+' term 
+	 | term '-' term 
+	 | term '*' term 
+	 | term '/' term 
+	 | '-' term 
+	 | call_stmt 
 
+/* boolean expressions (should only be used inside IF and WHILE statements)*/
+condition : term '<' term
+		  | term '>' term
+		  | term EQ term
+		  | term LEQ term
+		  | term GEQ term
+
+asgn_stmt : IDENTIFIER '=' expr ';'
+while_loop : WHILE '(' condition ')' stmt
+call_stmt : PRINT '(' call_params ')' | READ '(' call_params ')'
+return_stmt : RETURN '(' expr ')' ';'
 %%
-/******************** SUBROUTINES ********************/
-/*
- * Allows user to specify a valid file path as a command-line argument
- * (i.e. './parser.out test.c') to run the parser on.
- */
-int main(int argc, char** argv){
+
+int main(int argc, char** argv) {
 	if (argc == 2){
 		yyin = fopen(argv[1], "r");
 		yyparse();
