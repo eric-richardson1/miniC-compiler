@@ -6,4 +6,4 @@ $(yacc_file).out: $(lex_file).l $(yacc_file).y
 	gcc -o $(yacc_file).out lex.yy.c y.tab.c
 
 clean:
-	rm lex.yy.c y.tab.c y.tab.h $(yacc_file).out
+	rm lex.yy.c y.tab.c y.tab.h $(yacc_file).out y.output
