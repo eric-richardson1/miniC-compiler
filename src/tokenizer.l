@@ -55,11 +55,15 @@ digit       [0-9]
     return RETURN;
 }
 
-"print"|"read"     {
+"print"     {
     printf("%s", yytext);
-    return FUNC;
+    return PRINT;
 }
 
+"read"      { 
+    printf("%s", yytext);
+    return READ;
+}
 
 "=="        {
     printf("%s", yytext);
