@@ -5,15 +5,14 @@ int func(int i){
 	int a;
 	int b;
 	
-  if (a < i){
-		while (b < i){
-			b = b + 20;
-		}
+	while (b < i){
+		int a;
 		a = 10 + b;
+		b = b * i;
 	}
-	else {
-		if (b < i) 
-			b = a;
+
+	while (b < i){
+		int a;
+		b = b * 10;
 	}
-	return(a + b);
 }

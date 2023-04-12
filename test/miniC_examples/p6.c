@@ -6,8 +6,7 @@ int func(int a) {
     int loc1;
     int loc2;
     int i;
-    
-    loc1 = a + (-10) - (4 * -(5 + 3));
+    loc1 = 10;
     loc2 = a * 10;
     
     if (loc1 > loc2) 
