@@ -7,6 +7,7 @@
 
 /******************** DEFINITIONS ********************/
 %{
+    #include "../common/ast.h"
     #include <stdio.h>
     #include "y.tab.h"
 %}
@@ -21,81 +22,68 @@ digit       [0-9]
  */
 %%
 "if"        {
-    printf("%s", yytext);
     return IF;
             }
 
 "else"      {
-    printf("%s", yytext);
     return ELSE;
 }
 
 "while"     {
-    printf("%s", yytext);
     return WHILE;
 }
 
 "int"       {
-    printf("%s", yytext);
     return INT;
 }
 
 "void"      {
-    printf("%s", yytext);
     return VOID;
 }
 
 "extern"    {
-    printf("%s", yytext);
     return EXTERN;
 }
 
 "return"    {
-    printf("%s", yytext);
     return RETURN;
 }
 
 "print"     {
-    printf("%s", yytext);
     return PRINT;
 }
 
 "read"      { 
-    printf("%s", yytext);
     return READ;
 }
 
 "=="        {
-    printf("%s", yytext);
     return EQ;}
 ">="        {
-    printf("%s", yytext);
     return GEQ;
 }
 "<="        {
-    printf("%s", yytext);
     return LEQ;
 }
 
 [-+*/(){}<>=;] {
-    printf("%s", yytext);
     return yytext[0];
 }
 
 {letter}({letter}|{digit}|_)* {
-    printf("%s", yytext);
+    yylval.sval = strdup(yytext);
+    
     return IDENTIFIER;
     
 }
 
 {digit}+ {
-    printf("%s", yytext);
+    yylval.ival = atoi(yytext);
     return NUM;
     
 }
 
 .|[ \t\n] {
-    printf("%s", yytext);
 }
 %%
 
