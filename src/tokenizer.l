@@ -15,76 +15,34 @@ letter      [a-zA-Z]
 digit       [0-9]
 
 /******************** RULES ********************/
-/* Note: When an expression is matched, it is currently being printed to stdout. 
- * In effect, a correctly tokenized, parsed input file will be printed unaltered.
- * If syntax errors are detected, then the file will be printed unaltered up to
- * the point at which the error was encountered.  
- */
 %%
-"if"        {
-    return IF;
-            }
 
-"else"      {
-    return ELSE;
-}
+"if"            {return IF;}
+"else"          {return ELSE;}
+"while"         {return WHILE;}
+"int"           {return INT;}
+"void"          {return VOID;}
+"extern"        {return EXTERN;}
+"return"        {return RETURN;}
+"print"         {return PRINT;}
+"read"          {return READ;}
 
-"while"     {
-    return WHILE;
-}
-
-"int"       {
-    return INT;
-}
-
-"void"      {
-    return VOID;
-}
-
-"extern"    {
-    return EXTERN;
-}
-
-"return"    {
-    return RETURN;
-}
-
-"print"     {
-    return PRINT;
-}
-
-"read"      { 
-    return READ;
-}
-
-"=="        {
-    return EQ;}
-">="        {
-    return GEQ;
-}
-"<="        {
-    return LEQ;
-}
-
-[-+*/(){}<>=;] {
-    return yytext[0];
-}
+"=="            {return EQ;}
+">="            {return GEQ;}
+"<="            {return LEQ;}
+[-+*/(){}<>=;]  {return yytext[0];}
 
 {letter}({letter}|{digit}|_)* {
     yylval.sval = strdup(yytext);
-    
     return IDENTIFIER;
-    
 }
 
 {digit}+ {
     yylval.ival = atoi(yytext);
     return NUM;
-    
 }
 
-.|[ \t\n] {
-}
+.|[ \t\n]
 %%
 
 /******************** SUBROUTINES ********************/
