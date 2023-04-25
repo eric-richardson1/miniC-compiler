@@ -12,14 +12,14 @@
 #include <stdio.h>
 
 /***************************************** FUNCTION HEADERS *****************************************/
-void analyzeAST(astNode *root);
-void analyzeASTStmt(astNode *node, std::vector<astNode*> &node_stack, 
+bool isValidAST(astNode *root);
+void processStmt(astNode *node, std::vector<astNode*> &node_stack, 
 	std::vector<std::unordered_set<std::string>> &sym_stack, std::unordered_set<astNode*> &to_pop);
 
 /***************************************** FUNCTION DEFINITIONS *****************************************/
 /* Takes root node of a miniC program's AST as parameter and determines if 
    any variables were used before they were declared */
-void analyzeAST(astNode *root) {
+bool isValidAST(astNode *root) {
 	std::unordered_set<astNode*> to_pop; // set used to revisit block/function nodes
 	std::vector<astNode*> node_stack; // stack used for tree traversal
 	std::vector<std::unordered_set<std::string>> sym_stack; // stack used for maintaining symbol tables
@@ -58,7 +58,7 @@ void analyzeAST(astNode *root) {
 				break;
 			}
 			case ast_stmt: {
-				analyzeASTStmt(node, node_stack, sym_stack, to_pop);
+				processStmt(node, node_stack, sym_stack, to_pop);
 				break;
 			}
 			case ast_var: {
@@ -71,7 +71,8 @@ void analyzeAST(astNode *root) {
 					}
 				}
 				if (!found) {
-					fprintf(stderr, "Variable %s used before declared\n", curr_var);
+					fprintf(stderr, "Error: variable '%s' used before declared\n", curr_var);
+					return false;
 				}
 				break;
 			}
@@ -91,11 +92,12 @@ void analyzeAST(astNode *root) {
 			}
 		}
 	}
+	return true;
 }
 
 /* Helper function for analyzeAST(): takes an AST statement node (as well as the node stack, 
    symbol table stack, and 'to_pop' set) as parameters and processes the individual statement separately */
-void analyzeASTStmt(astNode *node, std::vector<astNode*> &node_stack, 
+void processStmt(astNode *node, std::vector<astNode*> &node_stack, 
 	std::vector<std::unordered_set<std::string>> &sym_stack, std::unordered_set<astNode*> &to_pop) {
 	switch (node->stmt.type) {
 		case ast_block: {

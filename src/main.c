@@ -5,23 +5,28 @@
 
 #include "../common/ast.h"
 #include <stdio.h>
+#include <stdbool.h>
 
 /****************** FUNCTION HEADERS ******************/
 extern astNode *parse(const char*);
-extern void analyzeAST(astNode *node);
+extern bool isValidAST(astNode *node);
 
 /* Takes the filepath of a miniC program as input */
 int main(int argc, char** argv) {
-	astNode *root;
-	if (argc == 2){
-		root = parse(argv[1]);
-	}
-	else {
-		fprintf(stderr, "Missing argument: miniC filepath\n");
+	if (argc == 1) {
+		fprintf(stderr, "Missing argument: miniC program filepath\n");
 		return 1;
 	}
-	
-	analyzeAST(root);
+	else if (argc > 2) {
+		fprintf(stderr, "Error: too many arguments provided\n");
+		return 2;
+	}
+	astNode *root = parse(argv[1]);
+	if (!isValidAST(root)) {
+		freeNode(root);
+		return 3;
+	}
+
 	freeNode(root);
 	return 0;
 }
