@@ -4,7 +4,7 @@
  * abstract syntax tree.
  */
 
-#include "../common/ast.h"
+#include "../../common/ast.h"
 #include <vector>
 #include <unordered_set>
 #include <stdbool.h>

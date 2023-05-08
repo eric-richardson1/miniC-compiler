@@ -10,6 +10,7 @@
 /****************** FUNCTION HEADERS ******************/
 extern astNode *parse(const char*);
 extern bool isValidAST(astNode *node);
+extern void generateIR(astNode *root, const char *module_name);
 
 /* Takes the filepath of a miniC program as input */
 int main(int argc, char** argv) {
@@ -21,11 +22,15 @@ int main(int argc, char** argv) {
 		fprintf(stderr, "Error: too many arguments provided\n");
 		return 2;
 	}
-	astNode *root = parse(argv[1]);
+	const char *filename = argv[1];
+	astNode *root = parse(filename);
 	if (!isValidAST(root)) {
 		freeNode(root);
 		return 3;
 	}
+	
+	generateIR(root, filename);
+	printNode(root);
 
 	freeNode(root);
 	return 0;
