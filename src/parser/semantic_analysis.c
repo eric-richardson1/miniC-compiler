@@ -91,8 +91,7 @@ bool isValidAST(astNode *root) {
 				break;
 			}
 			default: {
-				fprintf(stderr, "Error: Invalid node type encountered in semantic analysis\n");
-				return false;
+				break;
 			}
 		}
 	}

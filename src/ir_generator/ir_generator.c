@@ -82,6 +82,11 @@ void generateNodeIR(astNode *node, LLVMModuleRef module, std::unordered_map<stri
             generateStmtIR(node, module, ptr_map, builder, func);
             break;
         }
+        default: {
+            fprintf(stderr, "Error: Invalid node type encountered in IR generation\n");
+            exit(1);
+
+        }
     }
 
 }
@@ -247,6 +252,10 @@ LLVMValueRef generate(astNode *node, LLVMModuleRef module, std::unordered_map<st
             LLVMValueRef ptr = ptr_map.at(node->var.name);
             return LLVMBuildLoad2(builder, LLVMInt32Type(), ptr, "");
             
+        }
+        default: {
+            fprintf(stderr, "Error: Invalid node type encountered in IR generator\n");
+            exit(1);
         }
     }
 }
