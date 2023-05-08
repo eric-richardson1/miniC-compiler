@@ -90,6 +90,10 @@ bool isValidAST(astNode *root) {
 				node_stack.push_back(node->uexpr.expr);
 				break;
 			}
+			default: {
+				fprintf(stderr, "Error: Invalid node type encountered in semantic analysis\n");
+				return false;
+			}
 		}
 	}
 	return true;
