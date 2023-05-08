@@ -6,11 +6,14 @@
 #include "../common/ast.h"
 #include <stdio.h>
 #include <stdbool.h>
+#include <llvm-c/Core.h>
+#include <llvm-c/IRReader.h>
+#include <llvm-c/Types.h>
 
 /****************** FUNCTION HEADERS ******************/
 extern astNode *parse(const char*);
 extern bool isValidAST(astNode *node);
-extern void generateIR(astNode *root, const char *module_name);
+extern LLVMModuleRef generateIR(astNode *root, const char *module_name);
 
 /* Takes the filepath of a miniC program as input */
 int main(int argc, char** argv) {
@@ -28,10 +31,8 @@ int main(int argc, char** argv) {
 		freeNode(root);
 		return 3;
 	}
-	
-	generateIR(root, filename);
-	printNode(root);
-
+	LLVMModuleRef module = generateIR(root, filename);
+	LLVMDumpModule(module);
 	freeNode(root);
 	return 0;
 }
