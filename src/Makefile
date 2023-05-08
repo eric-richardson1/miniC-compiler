@@ -31,4 +31,4 @@ lex.yy.c: $(LEX_FILE).l y.tab.c
 	lex $<
 
 clean:
-	rm -f $(EXECUTABLE) $(LIB_NAME).a $(LIB_OBJECTS) lex.yy.c y.tab.c y.tab.h
+	rm -f $(EXECUTABLE) $(LIB_NAME).a *.o lex.yy.c y.tab.c y.tab.h test.ll y.output
