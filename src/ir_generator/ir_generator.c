@@ -13,6 +13,7 @@
 void generateStmtIR(astNode *node, LLVMModuleRef module, std::unordered_map<string, LLVMValueRef> &ptr_map, LLVMBuilderRef &builder, LLVMValueRef func);
 LLVMValueRef generate(astNode *node, LLVMModuleRef module, std::unordered_map<string, LLVMValueRef> &ptr_map, LLVMBuilderRef builder);
 void generateNodeIR(astNode *node, LLVMModuleRef module, std::unordered_map<string, LLVMValueRef> &ptr_map, LLVMBuilderRef builder, LLVMValueRef func);
+void cleanUpIR(LLVMModuleRef module);
 #define prt(x) if(x) { printf("%s\n", x); }
 
 
@@ -41,6 +42,7 @@ LLVMModuleRef generateIR(astNode *root, const char *module_name) {
     LLVMSetLinkage(extern_read, LLVMExternalLinkage);
 
     generateNodeIR(root, module, ptr_map, builder, func);
+    cleanUpIR(module);
     LLVMDisposeBuilder(builder);
     
     return module;
@@ -258,5 +260,26 @@ LLVMValueRef generate(astNode *node, LLVMModuleRef module, std::unordered_map<st
             exit(1);
         }
     }
+}
+
+void cleanUpIR(LLVMModuleRef module) {
+    for (LLVMValueRef function =  LLVMGetFirstFunction(module); function; function = LLVMGetNextFunction(function)) {
+        for (LLVMBasicBlockRef basicBlock = LLVMGetFirstBasicBlock(function); basicBlock; basicBlock = LLVMGetNextBasicBlock(basicBlock)) {
+            bool can_delete = false;
+            LLVMValueRef instruction = LLVMGetFirstInstruction(basicBlock);
+            while (instruction) {
+                if (can_delete) {
+                    LLVMValueRef next_instruction = LLVMGetNextInstruction(instruction);
+                    LLVMInstructionEraseFromParent(instruction);
+                    instruction = next_instruction;
+                    continue;
+                }
+                if (LLVMIsAReturnInst(instruction)) {
+                    can_delete = true;
+                }
+                instruction = LLVMGetNextInstruction(instruction);
+            }
+        }	
+ 	}
 }
 
