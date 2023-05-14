@@ -4,7 +4,7 @@ YACC_FILE := parser/parser
 EXECUTABLE := compile
 SOURCE := main.cpp
 
-LIB_SOURCES := lex.yy.c y.tab.c ../common/ast.c parser/semantic_analysis.c ir_generator/ir_generator.c
+LIB_SOURCES := lex.yy.c y.tab.c ../common/ast.c parser/semantic_analysis.c ir_generator/ir_generator.c optimizer/optimizer.c
 LIB_OBJECTS := $(LIB_SOURCES:.c=.o)
 LIB_NAME := miniC-lib
 
@@ -12,6 +12,8 @@ CC := g++
 CPP := clang++
 LLVM_CFLAGS := `llvm-config-15 --cflags` -I /usr/include/llvm-c-15
 LLVM_CPPFLAGS := `llvm-config-15 --cxxflags --ldflags --libs core`
+
+TEST = ../../test/optimizer_tests/test1
 
 all: $(EXECUTABLE)
 
@@ -30,5 +32,7 @@ y.tab.c: $(YACC_FILE).y
 lex.yy.c: $(LEX_FILE).l y.tab.c
 	lex $<
 
+
+
 clean:
-	rm -f $(EXECUTABLE) $(LIB_NAME).a *.o lex.yy.c y.tab.c y.tab.h test.ll y.output
+	rm -f $(EXECUTABLE) $(LIB_NAME).a $(LIB_OBJECTS) lex.yy.c y.tab.c y.tab.h test.ll y.output

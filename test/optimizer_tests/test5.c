@@ -1,7 +1,7 @@
 extern void print(int);
 extern int read();
 
-int test(){
+int test() {
 	int n;
 	int c;
 	n = 10;

@@ -1,10 +1,10 @@
 /* Author: Eric Richardson
  * Dartmouth CS57, Spring 2023
- * semantic_analysis.c - provides functions for performing semantic analysis on an 
+ * semantic_analysis.c - implements functions necessary for performing semantic analysis on an 
  * abstract syntax tree.
  */
 
-#include "../../common/ast.h"
+#include "semantic_analysis.h"
 #include <vector>
 #include <unordered_set>
 #include <stdbool.h>
@@ -12,13 +12,12 @@
 #include <stdio.h>
 
 /***************************************** FUNCTION HEADERS *****************************************/
-bool isValidAST(astNode *root);
 void processStmt(astNode *node, std::vector<astNode*> &node_stack, 
 	std::vector<std::unordered_set<std::string>> &sym_stack, std::unordered_set<astNode*> &to_pop);
 
-/***************************************** FUNCTION DEFINITIONS *****************************************/
-/* Takes root node of a miniC program's AST as parameter and determines if 
-   any variables were used before they were declared */
+/***************************************** IMPLEMENTATION *****************************************/
+
+/*********************** see "semantic_analysis.h" for details ***********************/
 bool isValidAST(astNode *root) {
 	std::unordered_set<astNode*> to_pop; // set used to revisit block/function nodes
 	std::vector<astNode*> node_stack; // stack used for tree traversal

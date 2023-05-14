@@ -4,6 +4,9 @@
  */
 
 #include "../common/ast.h"
+#include "ir_generator/ir_generator.h"
+#include "optimizer/optimizer.h"
+#include "parser/semantic_analysis.h"
 #include <stdio.h>
 #include <stdbool.h>
 #include <llvm-c/Core.h>
@@ -12,8 +15,6 @@
 
 /****************** FUNCTION HEADERS ******************/
 extern astNode *parse(const char*);
-extern bool isValidAST(astNode *node);
-extern LLVMModuleRef generateIR(astNode *root, const char *module_name);
 
 /* Takes the filepath of a miniC program as input */
 int main(int argc, char** argv) {
@@ -32,6 +33,7 @@ int main(int argc, char** argv) {
 		return 3;
 	}
 	LLVMModuleRef module = generateIR(root, filename);
+	optimize(module);
 	LLVMDumpModule(module);
 	freeNode(root);
 	return 0;
