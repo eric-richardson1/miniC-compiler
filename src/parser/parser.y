@@ -152,7 +152,7 @@ while_loop : WHILE '(' condition ')' stmt {$$ = createWhile($3, $5);}
 call_stmt : PRINT '(' term ')' {$$ = createCall("print", $3);}
 		  | READ '(' ')' {$$ = createCall("read", NULL);}
 
-return_stmt : RETURN '(' expr ')' ';' {$$ = createRet($3);}		
+return_stmt : RETURN '(' term ')' ';' {$$ = createRet($3);}		
 %%
 
 /* takes the filename of a miniC program as parameter and returns the root node of 
