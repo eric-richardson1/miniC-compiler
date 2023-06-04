@@ -1,6 +1,6 @@
 /* Author: Eric Richardson
  * Dartmouth CS57, Spring 2023
- * ir_generator.h - defines functions necessary for performing LLVM IR generation
+ * ir_generator.c - implements functions necessary for performing LLVM IR generation
  */
 
 #include "ir_generator.h"

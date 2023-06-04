@@ -4,7 +4,7 @@ YACC_FILE := parser/parser
 EXECUTABLE := compile
 SOURCE := main.cpp
 
-LIB_SOURCES := lex.yy.c y.tab.c ../common/ast.c parser/semantic_analysis.c ir_generator/ir_generator.c optimizer/optimizer.c
+LIB_SOURCES := lex.yy.c y.tab.c ast/ast.c parser/semantic_analysis.c ir_generator/ir_generator.c optimizer/optimizer.c code_generator/code_generator.c
 LIB_OBJECTS := $(LIB_SOURCES:.c=.o)
 LIB_NAME := miniC-lib
 
@@ -35,4 +35,4 @@ lex.yy.c: $(LEX_FILE).l y.tab.c
 
 
 clean:
-	rm -f $(EXECUTABLE) $(LIB_NAME).a $(LIB_OBJECTS) lex.yy.c y.tab.c y.tab.h test.ll y.output
+	rm -f $(EXECUTABLE) $(LIB_NAME).a $(LIB_OBJECTS) lex.yy.c y.tab.c y.tab.h test.ll y.output main.out

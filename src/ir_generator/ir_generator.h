@@ -7,7 +7,7 @@
 #ifndef IR_GENERATOR_H
 #define IR_GENERATOR_H
 
-#include "../../common/ast.h"
+#include "../ast/ast.h"
 #include <llvm-c/Core.h>
 
 

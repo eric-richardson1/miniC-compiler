@@ -7,7 +7,7 @@
 
 /******************** DEFINITIONS ********************/
 %{
-	#include "../common/ast.h"
+	#include "ast/ast.h"
 	#include <stdio.h>
 	
 	extern int yylex();
@@ -47,6 +47,7 @@
 /* mini_c programs start with mandatory declarations of "print" and "read" functions
    followed by the primary function definition */
 program : extern_print extern_read function_def {root = createProg($1, $2, $3);}
+		| extern_read extern_print function_def {root = createProg($2, $1, $3);}
 
 extern_print : EXTERN VOID PRINT '(' INT ')' ';' {$$ = createExtern("print");}
 
@@ -152,7 +153,8 @@ while_loop : WHILE '(' condition ')' stmt {$$ = createWhile($3, $5);}
 call_stmt : PRINT '(' term ')' {$$ = createCall("print", $3);}
 		  | READ '(' ')' {$$ = createCall("read", NULL);}
 
-return_stmt : RETURN '(' term ')' ';' {$$ = createRet($3);}		
+return_stmt : RETURN '(' term ')' ';' {$$ = createRet($3);}	
+			| RETURN term ';' {$$ = createRet($2);}	
 %%
 
 /* takes the filename of a miniC program as parameter and returns the root node of 

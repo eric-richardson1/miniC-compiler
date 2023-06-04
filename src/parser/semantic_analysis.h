@@ -7,7 +7,7 @@
 #ifndef SEMANTIC_ANALYSIS_H
 #define SEMANTIC_ANALYSIS_H
 
-#include "../../common/ast.h"
+#include "../ast/ast.h"
 
 /*
  * Params: 

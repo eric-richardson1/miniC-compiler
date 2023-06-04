@@ -7,7 +7,7 @@
 
 /******************** DEFINITIONS ********************/
 %{
-    #include "../common/ast.h"
+    #include "ast/ast.h"
     #include <stdio.h>
     #include "y.tab.h"
 %}

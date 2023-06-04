@@ -3,10 +3,12 @@
  * main.c - entry point for the entire compiler, defines required 'main' function
  */
 
-#include "../common/ast.h"
+#include "ast/ast.h"
+#include "code_generator/code_generator.h"
 #include "ir_generator/ir_generator.h"
 #include "optimizer/optimizer.h"
 #include "parser/semantic_analysis.h"
+#include <unordered_map>
 #include <stdio.h>
 #include <stdbool.h>
 #include <llvm-c/Core.h>
@@ -15,6 +17,7 @@
 
 /****************** FUNCTION HEADERS ******************/
 extern astNode *parse(const char*);
+//extern void generateAssembly(LLVMModuleRef module);
 
 /* Takes the filepath of a miniC program as input */
 int main(int argc, char** argv) {
@@ -34,7 +37,10 @@ int main(int argc, char** argv) {
 	}
 	LLVMModuleRef module = generateIR(root, filename);
 	optimize(module);
-	LLVMDumpModule(module);
+
+	LLVMPrintModuleToFile(module, "func.ll", NULL);
+	generateAssembly(module);
 	freeNode(root);
+
 	return 0;
 }
