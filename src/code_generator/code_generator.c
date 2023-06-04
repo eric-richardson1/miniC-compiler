@@ -1,3 +1,7 @@
+/* Author: Eric Richardson
+ * Dartmouth CS57, Spring 2023
+ * ir_generator.c - implements functions necessary for performing assembly code generation
+ */
 
 #include "code_generator.h"
 #include <stdio.h>
@@ -12,6 +16,10 @@
 
 using namespace std;
 
+/*
+ * Determines whether an LLVMValueRef is a call instruction
+ * and, if it is, whether that call instruction takes any parameters
+ */
 bool isReturnTypeVoid(LLVMValueRef call_inst) {
     if (LLVMIsACallInst(call_inst)) {
         LLVMTypeRef func_type = LLVMGetCalledFunctionType(call_inst);
@@ -24,9 +32,17 @@ bool isReturnTypeVoid(LLVMValueRef call_inst) {
     return false;
 }
 
+/*
+ * Assigns index values and computes the 'liveness range' for each instruction 
+ * in a given basic block. 
+ *
+ * Note: it is expected that the caller passes empty maps by reference for 'inst_index' and 
+ * 'live_range' 
+ */
 void computeLiveness(LLVMBasicBlockRef bb, std::unordered_map<LLVMValueRef, int> &inst_index, std::unordered_map<LLVMValueRef, std::pair<int, int>> &live_range) {
+
+    // assign an index to all non-alloca instructions
     int i = 0;
-    
     for (LLVMValueRef instruction = LLVMGetFirstInstruction(bb); instruction; instruction = LLVMGetNextInstruction(instruction)) {
         
         if (LLVMIsAAllocaInst(instruction)) {
@@ -38,6 +54,7 @@ void computeLiveness(LLVMBasicBlockRef bb, std::unordered_map<LLVMValueRef, int>
         i += 1;
     }
 
+    // Determine index range for which each instruction is live
     for (LLVMValueRef instruction = LLVMGetFirstInstruction(bb); instruction; instruction = LLVMGetNextInstruction(instruction)) {
         if (LLVMIsAAllocaInst(instruction) || LLVMIsAStoreInst(instruction) || LLVMIsABranchInst(instruction) || LLVMIsAReturnInst(instruction) || isReturnTypeVoid(instruction)) {
             continue;
@@ -76,10 +93,12 @@ void computeLiveness(LLVMBasicBlockRef bb, std::unordered_map<LLVMValueRef, int>
 
 }
 
+// Comparator used for sorting live range end times
 bool reg_cmp(std::pair<LLVMValueRef, std::pair<int, int>> &a, std::pair<LLVMValueRef, std::pair<int, int>> &b) {
     return a.second.second > b.second.second;
 }
 
+// Sorts the keys of 'live_range' in descending end-index order
 std::vector<LLVMValueRef> sortLivenessMap(std::unordered_map<LLVMValueRef, std::pair<int, int>> &live_range) {
     std::vector<LLVMValueRef> res;
     std::vector<std::pair<LLVMValueRef, std::pair<int, int>>> intermediate_res;
@@ -91,16 +110,13 @@ std::vector<LLVMValueRef> sortLivenessMap(std::unordered_map<LLVMValueRef, std::
     std::sort(intermediate_res.begin(), intermediate_res.end(), reg_cmp);
 
     for (std::vector<std::pair<LLVMValueRef, std::pair<int, int>>>::iterator iter = intermediate_res.begin(); iter != intermediate_res.end(); iter++) {
-
         std::pair<LLVMValueRef, std::pair<int, int>> ele = *iter;
-
         res.push_back(ele.first);
     }
-
     return res;
-
 }
 
+// Finds the best LLVMValueRef to spill based on sorting heuristic 
 LLVMValueRef findSpill(LLVMBasicBlockRef bb, std::vector<LLVMValueRef> &sorted_vals, std::unordered_map<LLVMValueRef, int> &reg_map) {
     for (int i = 0; i < sorted_vals.size(); i++) {
         if (reg_map.count(sorted_vals.at(i)) && reg_map.at(sorted_vals.at(i)) != SPILL) {
@@ -110,6 +126,10 @@ LLVMValueRef findSpill(LLVMBasicBlockRef bb, std::vector<LLVMValueRef> &sorted_v
     return NULL;
 }
 
+/* Assigns a register to all "value-generating" instructions within the provided function;
+ * Based on Poletto and Sarkar's linear-scan register allocation algorithm
+ * (see http://web.cs.ucla.edu/~palsberg/course/cs132/linearscan.pdf)
+ */
 std::unordered_map<LLVMValueRef, int> allocateRegisters(LLVMValueRef function, std::unordered_map<LLVMValueRef, int> &inst_index, std::unordered_map<LLVMValueRef, std::pair<int, int>> &live_range) {
     std::unordered_map<LLVMValueRef, int> reg_map;
     for (LLVMBasicBlockRef bb = LLVMGetFirstBasicBlock(function); bb; bb = LLVMGetNextBasicBlock(bb)) {
@@ -152,8 +172,6 @@ std::unordered_map<LLVMValueRef, int> allocateRegisters(LLVMValueRef function, s
                         int reg = *reg_it;
                         
                         available_registers.erase(reg);
-                        
-
                         std::pair<LLVMValueRef, int> reg_entry (instruction, reg);
                         reg_map.insert(reg_entry);
 
@@ -162,27 +180,17 @@ std::unordered_map<LLVMValueRef, int> allocateRegisters(LLVMValueRef function, s
                         if (reg_map.count(second_op) && reg_map.at(second_op) != SPILL && live_range.at(second_op).second <= inst_index.at(instruction)) {
                             available_registers.insert(reg_map.at(second_op));
                         }
-                        
-                        
-                        
-                    }
-                    
-                    
-                    
+                    }                  
                 }
                 else if (!available_registers.empty()) {
  
                     std::unordered_set<int>::iterator reg_it = available_registers.begin();
-                    
                     int reg = *reg_it;
-                    
                     available_registers.erase(reg);
                     
                     std::pair<LLVMValueRef, int> reg_entry (instruction, reg);
-                    
                     reg_map.insert(reg_entry);
-                    
-
+                
                     int num_operands = LLVMGetNumOperands(instruction);
                     for (int i = 0; i < num_operands; i++) {
                         LLVMValueRef op = LLVMGetOperand(instruction, i);
@@ -190,9 +198,7 @@ std::unordered_map<LLVMValueRef, int> allocateRegisters(LLVMValueRef function, s
                         if (live_range.count(op) && live_range.at(op).second <= inst_index.at(instruction) && reg_map.count(op) && reg_map.at(op) != SPILL) {
                             available_registers.insert(reg_map.at(op));
                         }
-                       
                     }
-    
                 }
                 else {
                     vector<LLVMValueRef> sorted_vals = sortLivenessMap(live_range);
@@ -237,6 +243,10 @@ std::unordered_map<LLVMValueRef, int> allocateRegisters(LLVMValueRef function, s
     
 }
 
+/* 
+ * Calculates the offset map for all local/temporary variables in the
+ * provided function; also populates local_mem variable
+ */
 std::unordered_map<LLVMValueRef, int> getOffsetMap(LLVMValueRef function, int *local_mem) {
     std::unordered_map<LLVMValueRef, int> offset_map;
     LLVMValueRef param;
@@ -290,6 +300,9 @@ std::unordered_map<LLVMValueRef, int> getOffsetMap(LLVMValueRef function, int *l
     return offset_map;
 }
 
+/*
+ * Assigns a string label to each basic block in the provided function
+ */
 std::unordered_map<LLVMBasicBlockRef, std::string> createBBLabels(LLVMValueRef function) {
     
     std::unordered_map<LLVMBasicBlockRef, std::string> bb_labels;
@@ -311,6 +324,9 @@ std::unordered_map<LLVMBasicBlockRef, std::string> createBBLabels(LLVMValueRef f
     return bb_labels;
 }
 
+/*
+ * Writes the function prologue to the provided file
+ */
 void printDirectives(LLVMModuleRef module, LLVMValueRef function, FILE *fp) {
     size_t flen;
     const char *fname = LLVMGetSourceFileName(module, &flen);
@@ -328,13 +344,18 @@ void printDirectives(LLVMModuleRef module, LLVMValueRef function, FILE *fp) {
     fprintf(fp, "\tmovl\t%%esp, %%ebp\n");
 
 }
-
+/*
+ * Writes the function epilogue to the provided file
+ */
 void printFunctionEnd(FILE *fp) {
     fprintf(fp, "\tpopl\t%%ebx\n");
     fprintf(fp, "\tleave\n");
     fprintf(fp, "\tret\n");
 }
 
+/*
+ * Helper function to get register names as strings from 'reg_t' enum
+ */
 const char *getRegisterStr(int reg) {
     switch (reg) {
         case EAX: {
@@ -355,9 +376,8 @@ const char *getRegisterStr(int reg) {
     }
 }
 
-
+/*********************** see "code_generator.h" for details ***********************/
 void generateAssembly(LLVMModuleRef module) {
-    
     FILE *fp = fopen("func.s", "w");
     std::unordered_map<LLVMValueRef, int> inst_index;
     std::unordered_map<LLVMValueRef, std::pair<int, int>> live_range;
@@ -365,11 +385,9 @@ void generateAssembly(LLVMModuleRef module) {
     LLVMValueRef function = LLVMGetLastFunction(module);
     std::unordered_map<LLVMValueRef, int> reg_map = allocateRegisters(function, inst_index, live_range);
     
-
     int local_mem = 0;
     std::unordered_map<LLVMValueRef, int> offset_map = getOffsetMap(function, &local_mem);
 
-    
     std::unordered_map<LLVMBasicBlockRef, std::string> bb_labels = createBBLabels(function);
     printDirectives(module, function, fp);
     fprintf(fp, "\tsubl\t$%d, %%esp\n", local_mem);
@@ -380,7 +398,6 @@ void generateAssembly(LLVMModuleRef module) {
             fprintf(fp, "\n%s:\n", bb_labels.at(bb).c_str());
         }
         
-
         for (LLVMValueRef instruction = LLVMGetFirstInstruction(bb); instruction; instruction = LLVMGetNextInstruction(instruction)) {
             switch (LLVMGetInstructionOpcode(instruction)) {
                 case LLVMRet: {
@@ -536,10 +553,7 @@ void generateAssembly(LLVMModuleRef module) {
                     }
 
                     LLVMValueRef op1 = LLVMGetOperand(instruction, 0);
-                    LLVMValueRef op2 = LLVMGetOperand(instruction, 1);
-
-                   
-                    
+                    LLVMValueRef op2 = LLVMGetOperand(instruction, 1); 
                     if (LLVMIsAConstantInt(op1)) {
                         int const_val_op1 = LLVMConstIntGetSExtValue(op1);
                         fprintf(fp, "\tmovl\t$%d, %%%s\n", const_val_op1, getRegisterStr(reg));
@@ -678,11 +692,8 @@ void generateAssembly(LLVMModuleRef module) {
                     }
 
                     LLVMValueRef op1 = LLVMGetOperand(instruction, 0);
-                    
                     LLVMValueRef op2 = LLVMGetOperand(instruction, 1);
 
-                   
-                    
                     if (LLVMIsAConstantInt(op1)) {
                         int const_val_op1 = LLVMConstIntGetSExtValue(op1);
                         fprintf(fp, "\tmovl\t$%d, %%%s\n", const_val_op1, getRegisterStr(reg));
@@ -717,11 +728,9 @@ void generateAssembly(LLVMModuleRef module) {
                     }
                     break;
                 }
-
             }
         }
 
     }
-
     fclose(fp);
 }
