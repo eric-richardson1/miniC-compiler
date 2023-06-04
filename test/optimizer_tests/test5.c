@@ -1,10 +1,11 @@
 extern void print(int);
 extern int read();
 
-int test() {
+int func() {
 	int n;
 	int c;
-	n = 10;
+	n = 0;
+	c = 40;
 	while (n < 10) {
 		n = n + 1;
 		if (n == 9) {

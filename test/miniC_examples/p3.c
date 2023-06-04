@@ -15,4 +15,5 @@ int func(int i){
 
 		b = b * 10;
 	}
+	return b;
 }
