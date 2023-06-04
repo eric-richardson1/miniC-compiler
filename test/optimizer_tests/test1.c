@@ -14,5 +14,5 @@ int func(){
 	c = c * c;
 	b = 45;
 	
-	return(a + b); 
+	return(a); 
 }

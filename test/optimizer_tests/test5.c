@@ -8,8 +8,9 @@ int test() {
 	while (n < 10) {
 		n = n + 1;
 		if (n == 9) {
-			c = 4;
+			c = n * c;
+			print(c);
 		}
 	}
-	return(n + c);
+	return(n);
 }

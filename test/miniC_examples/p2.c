@@ -5,8 +5,8 @@ int func(int i){
 	int a;
 	int b;
 	
+	a = 10;
 	while (a < i){
-		int a;
 		while (b < i){
 			b = b + 20;
 		}

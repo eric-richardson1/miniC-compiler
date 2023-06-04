@@ -19,5 +19,6 @@ int func(int i){
 		if (b < i) 
 			b = a;
 	}
-	return(a + b);
+	a = a + b;
+	return a;
 }

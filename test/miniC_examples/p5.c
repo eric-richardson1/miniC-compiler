@@ -6,9 +6,9 @@ int func(int i){
 	int b;
 	
 	while (a < i){
-		int a;
+
 		a = read();
 		b = 10 + a;
 	}
-	return(a * b);
+	return(a);
 }
